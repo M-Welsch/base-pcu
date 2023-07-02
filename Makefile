@@ -125,7 +125,10 @@ LDSCRIPT= $(STARTUPLD)/STM32F070xB.ld
 # setting.
 CSRC = $(ALLCSRC) \
        $(TESTSRC) \
-       main.c
+       bcuCommunication/bcuCommunication.c \
+       bcuCommunication/usb.c \
+       bcuCommunication/threads.c \
+       main.c \
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
@@ -137,8 +140,11 @@ ASMSRC = $(ALLASMSRC)
 # List ASM with preprocessor source files here.
 ASMXSRC = $(ALLXASMSRC)
 
+BASE_INCDIR = ./bcuCommunication \
+		./core_defines
+
 # Inclusion directories.
-INCDIR = $(CONFDIR) $(ALLINC) $(TESTINC)
+INCDIR = $(CONFDIR) $(ALLINC) $(TESTINC) $(BASE_INCDIR)
 
 # Define C warning options here.
 CWARN = -Wall -Wextra -Wundef -Wstrict-prototypes
