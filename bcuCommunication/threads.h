@@ -2,6 +2,7 @@
 #define BASE_PCU_THREADS_H
 
 #define BCU_COMM_MB_BUFFER_SIZE 256
+#define BCU_COMM_INPUT_BUFFER_SIZE 256
 
 #include "ch.h"
 

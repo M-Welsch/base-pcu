@@ -135,6 +135,7 @@ static THD_FUNCTION(Blinker, arg) {
   while (true) {
     adcConvert(&ADCD1, &adcgrpcfg1, samples, 1);
     palClearPad(GPIOA, GPIOA_LED_GREEN);
+    //palClearPad(GPIOB, GPIPB_THT_LED_RED);
     palClearPad(GPIOA, MOTOR_DRV1);
     palSetPad(GPIOA, MOTOR_DRV2);
     uint32_t endswitch_state = palReadPad(GPIOB, nENDSWITCH_UNDOCKED);
@@ -144,6 +145,7 @@ static THD_FUNCTION(Blinker, arg) {
 
 
     palSetPad(GPIOA, GPIOA_LED_GREEN);
+    //palSetPad(GPIOB, GPIPB_THT_LED_RED);
     palClearPad(GPIOA, MOTOR_DRV2);
     palSetPad(GPIOA, MOTOR_DRV1);
     chThdSleepMilliseconds(1000);
@@ -188,6 +190,6 @@ int main(void) {
     chThdSleepMilliseconds(500);
     chsnprintf(buffer, 32, "cnt: %i", counter);
     sendToBcu(buffer);
-    counter+=10;
+    counter++;
   }
 }
