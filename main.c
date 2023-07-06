@@ -135,7 +135,7 @@ static THD_FUNCTION(Blinker, arg) {
   while (true) {
     adcConvert(&ADCD1, &adcgrpcfg1, samples, 1);
     palClearPad(GPIOA, GPIOA_LED_GREEN);
-    //palClearPad(GPIOB, GPIPB_THT_LED_RED);
+    //palClearPad(GPIOB, GPIPB_THT_LED_YELLOW);
     palClearPad(GPIOA, MOTOR_DRV1);
     palSetPad(GPIOA, MOTOR_DRV2);
     uint32_t endswitch_state = palReadPad(GPIOB, nENDSWITCH_UNDOCKED);
@@ -145,7 +145,7 @@ static THD_FUNCTION(Blinker, arg) {
 
 
     palSetPad(GPIOA, GPIOA_LED_GREEN);
-    //palSetPad(GPIOB, GPIPB_THT_LED_RED);
+    //palSetPad(GPIOB, GPIPB_THT_LED_YELLOW);
     palClearPad(GPIOA, MOTOR_DRV2);
     palSetPad(GPIOA, MOTOR_DRV1);
     chThdSleepMilliseconds(1000);
@@ -163,6 +163,8 @@ int main(void) {
    *   RTOS is active.
    */
   halInit();
+
+  palClearPad(GPIOB, GPIPB_THT_LED_YELLOW);
   chSysInit();
   bcuCommunication_init();
 
@@ -183,10 +185,6 @@ int main(void) {
   uint8_t counter = 0;
   char buffer[32] = "Hi";
   while (true) {
-    if (!palReadPad(GPIOC, GPIOC_BUTTON)) {
-      test_execute((BaseSequentialStream *)&SD2, &rt_test_suite);
-      test_execute((BaseSequentialStream *)&SD2, &oslib_test_suite);
-    }
     chThdSleepMilliseconds(500);
     chsnprintf(buffer, 32, "cnt: %i", counter);
     sendToBcu(buffer);

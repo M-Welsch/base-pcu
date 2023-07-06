@@ -8,7 +8,7 @@ void bcuCommunication_init(void) {
 }
 
 pcu_returncode_e sendToBcu(char* msg) {
-  msg_t retval = chMBPostTimeout(&bcu_comm_mb, (msg_t) msg, TIME_MS2I(200));
+  msg_t retval = putIntoOutputMailbox(msg);
   if (retval == MSG_OK) {
     return pcuSUCCESS;
   }

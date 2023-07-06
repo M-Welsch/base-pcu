@@ -1,13 +1,18 @@
 #include "ch.h"
 #include "hal.h"
 #include "usbcfg.h"
+#include "shell.h"
 #include "chprintf.h"
 #include "threads.h"
+#include "core_defines.h"
 
 /** @brief mailbox for messages to BaSe BCU */
 mailbox_t bcu_comm_mb;
 msg_t bcu_comm_mb_buffer[BCU_COMM_MB_BUFFER_SIZE];
 
+void _initializeMailbox(void) {
+  chMBObjectInit(&bcu_comm_mb, bcu_comm_mb_buffer, BCU_COMM_MB_BUFFER_SIZE);
+}
 
 static void _bcuCommunicationOutputMainloop(BaseSequentialStream *stream) {
   msg_t msg = 0;
@@ -18,7 +23,7 @@ static void _bcuCommunicationOutputMainloop(BaseSequentialStream *stream) {
 
 static THD_WORKING_AREA(bcuCommunicationOutputThread, 128);
 static THD_FUNCTION(bcuCommunicationOutput, arg) {
-  (void) arg;
+  UNUSED_PARAM(arg);
   chRegSetThreadName("BCU Communication Output Thread");
   BaseSequentialStream *stream = (BaseSequentialStream *) &SDU1;
 
@@ -27,31 +32,59 @@ static THD_FUNCTION(bcuCommunicationOutput, arg) {
   }
 }
 
+msg_t putIntoOutputMailbox(char* msg) {
+  return chMBPostTimeout(&bcu_comm_mb, (msg_t) msg, TIME_MS2I(200));
+}
+
+#define SHELL_WA_SIZE   THD_WORKING_AREA_SIZE(2048)
+
+
+static void cmd_led_on(BaseSequentialStream *chp, int argc, char *argv[]) {
+  UNUSED_PARAM(chp);
+  UNUSED_PARAM(argc);
+  UNUSED_PARAM(argv);
+  putIntoOutputMailbox("Led an\n");
+  palSetPad(GPIOB, GPIPB_THT_LED_YELLOW);
+}
+
+static void cmd_led_off(BaseSequentialStream *chp, int argc, char *argv[]) {
+  UNUSED_PARAM(chp);
+  UNUSED_PARAM(argc);
+  UNUSED_PARAM(argv);
+  putIntoOutputMailbox("Led aus\n");
+  palClearPad(GPIOB, GPIPB_THT_LED_YELLOW);
+}
+
+static const ShellCommand commands[] = {
+        {"led_on", cmd_led_on},
+        {"led_off", cmd_led_off},
+        {NULL, NULL}
+};
+
+static ShellConfig shell_cfg1 = {
+        (BaseSequentialStream *)&SDU1,
+        commands
+};
 
 static void _bcuCommunicationInputMainloop(void) {
-  char buffer[BCU_COMM_INPUT_BUFFER_SIZE];
-  uint32_t bytes = chnReadTimeout(&SDU1, (uint8_t *) buffer, BCU_COMM_INPUT_BUFFER_SIZE, TIME_INFINITE); /* hint: https://forum.chibios.org/viewtopic.php?t=824#p8071 */
-  if (bytes != 0) {
-    chMBPostTimeout(&bcu_comm_mb, (msg_t) buffer, TIME_MS2I(200));
+  if (SDU1.config->usbp->state == USB_ACTIVE) {
+    thread_t *shelltp = chThdCreateFromHeap(NULL, SHELL_WA_SIZE, "shell", NORMALPRIO+1, shellThread, (void *)&shell_cfg1);
+    chThdWait(shelltp);
   }
 }
 
 static THD_WORKING_AREA(bcuCommunicationInputThread, 128);
 static THD_FUNCTION(bcuCommunicationInput, arg) {
-  (void) arg;
+  UNUSED_PARAM(arg);
   chRegSetThreadName("BCU Communication Input Thread");
   while (true) {
     _bcuCommunicationInputMainloop();
   }
 }
 
-void _initializeMailbox(void) {
-  chMBObjectInit(&bcu_comm_mb, bcu_comm_mb_buffer, BCU_COMM_MB_BUFFER_SIZE);
-}
-
 void bcuCommunicationThreads_init(void) {
   _initializeMailbox();
+  shellInit();
   chThdCreateStatic(bcuCommunicationOutputThread, sizeof(bcuCommunicationOutputThread), NORMALPRIO, bcuCommunicationOutput, NULL);
-  // this thread crashes the program
-  //chThdCreateStatic(bcuCommunicationInputThread, sizeof(bcuCommunicationInputThread), NORMALPRIO, bcuCommunicationInput, NULL);
+  chThdCreateStatic(bcuCommunicationInputThread, sizeof(bcuCommunicationInputThread), NORMALPRIO+1, bcuCommunicationInput, NULL);
 }
