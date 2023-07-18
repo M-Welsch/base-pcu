@@ -26,7 +26,6 @@ static THD_FUNCTION(bcuCommunicationOutput, arg) {
   UNUSED_PARAM(arg);
   chRegSetThreadName("BCU Communication Output Thread");
   BaseSequentialStream *stream = (BaseSequentialStream *) &SDU1;
-
   while (true) {
     _bcuCommunicationOutputMainloop(stream);
   }
@@ -70,6 +69,9 @@ static void _bcuCommunicationInputMainloop(void) {
   if (SDU1.config->usbp->state == USB_ACTIVE) {
     thread_t *shelltp = chThdCreateFromHeap(NULL, SHELL_WA_SIZE, "shell", NORMALPRIO+1, shellThread, (void *)&shell_cfg1);
     chThdWait(shelltp);
+  }
+  else {
+      chThdSleepMilliseconds(100);
   }
 }
 
