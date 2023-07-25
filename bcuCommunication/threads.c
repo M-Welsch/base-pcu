@@ -75,7 +75,7 @@ static void cmd_get_measurement_values(BaseSequentialStream *chp, int argc, char
     measurementValues_t values;
     measurement_getValues(&values);
     static char buffer[64];
-    chsnprintf(buffer, 63, "adc: %i\n", values.adc1);
+    chsnprintf(buffer, 63, "adc: %i\n", values.stator_supply_sense);
     putIntoOutputMailbox(buffer);
 }
 

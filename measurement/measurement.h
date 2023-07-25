@@ -4,8 +4,10 @@
 #include <stdint-gcc.h>
 
 typedef struct {
-    uint16_t adc1;
-    uint16_t adc2;
+    uint16_t imotor_prot;
+    uint16_t stator_supply_sense;
+    uint16_t vin12_meas;
+
 } measurementValues_t;
 
 typedef enum {
