@@ -27,3 +27,12 @@ void measurement_getValues(measurementValues_t *values) {
     adcConvert(&ADCD1, &adcgrpcfg1, samples, 1);
     values->adc1 = samples[0];
 }
+
+switchState_t measurement_getEndswitch(void) {
+    if(!palReadPad(GPIOB, nENDSWITCH_UNDOCKED)) {
+        return PRESSED;
+    }
+    else {
+        return NOT_PRESSED;
+    }
+}

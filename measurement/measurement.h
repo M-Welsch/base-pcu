@@ -8,7 +8,13 @@ typedef struct {
     uint16_t adc2;
 } measurementValues_t;
 
+typedef enum {
+    NOT_PRESSED,
+    PRESSED
+} switchState_t;
+
 void measurement_init(void);
 void measurement_getValues(measurementValues_t *values);
+switchState_t measurement_getEndswitch(void);
 
 #endif //BASE_PCU_MEASUREMENT_H

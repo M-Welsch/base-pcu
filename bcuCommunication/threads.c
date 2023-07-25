@@ -79,11 +79,21 @@ static void cmd_get_measurement_values(BaseSequentialStream *chp, int argc, char
     putIntoOutputMailbox(buffer);
 }
 
+static void cmd_get_endswitch(BaseSequentialStream *chp, int argc, char *argv[]) {
+    UNUSED_PARAM(chp);
+    UNUSED_PARAM(argc);
+    UNUSED_PARAM(argv);
+    static char buffer[64];
+    chsnprintf(buffer, 63, "endswitch: %i\n", measurement_getEndswitch());
+    putIntoOutputMailbox(buffer);
+}
+
 static const ShellCommand commands[] = {
         {"led_on", cmd_led_on},
         {"led_off", cmd_led_off},
         {"current_date", cmd_current_date},
         {"get_measurement_values", cmd_get_measurement_values},
+        {"get_endswitch", cmd_get_endswitch},
         {NULL, NULL}
 };
 
