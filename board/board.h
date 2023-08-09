@@ -178,6 +178,8 @@
 /*
  * IO lines assignments.
  */
+#define LINE_MOTOR_DRV2             PAL_LINE(GPIOA, MOTOR_DRV2)
+#define LINE_MOTOR_DRV1             PAL_LINE(GPIOA, MOTOR_DRV1)
 #define LINE_ARD_A0                 PAL_LINE(GPIOA, 0U)
 #define LINE_ADC1_IN0               PAL_LINE(GPIOA, 0U)
 #define LINE_ARD_A1                 PAL_LINE(GPIOA, 1U)

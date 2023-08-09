@@ -2,19 +2,33 @@
 #include "hal.h"
 #include "measurement.h"
 
+static bool timeoutFlag = false;
+
+static void _set_timeoutFlag(GPTDriver *gptp) {
+    UNUSED_PARAM(gptp);
+    timeoutFlag = true;
+}
+
+const GPTConfig tim6_cfg = {
+    .frequency = 1000,                  /**< Frequency 1kHz */
+    .callback = _set_timeoutFlag,
+    .cr2 = 0U,
+    .dier = 0U
+};
+
 static inline void _motorDocking(void) {
-    palSetLine(MOTOR_DRV1);
-    palClearLine(MOTOR_DRV2);
+    palSetLine(LINE_MOTOR_DRV1);
+    palClearLine(LINE_MOTOR_DRV2);
 }
 
 static inline void _motorUndocking(void) {
-    palClearLine(MOTOR_DRV1);
-    palSetLine(MOTOR_DRV2);
+    palClearLine(LINE_MOTOR_DRV1);
+    palSetLine(LINE_MOTOR_DRV2);
 }
 
 static inline void _motorBreak(void) {
-    palClearLine(MOTOR_DRV1);
-    palClearLine(MOTOR_DRV2);
+    palClearLine(LINE_MOTOR_DRV1);
+    palClearLine(LINE_MOTOR_DRV2);
 }
 
 static inline bool _motorOvercurrent(uint16_t motor_current_measurement_value) {
@@ -54,7 +68,22 @@ pcu_returncode_e dock(void) {
 }
 
 pcu_returncode_e undock(void) {
-    return pcuFAIL;
+    _motorUndocking();
+    GPTD6.tim->CNT = 0;
+    gptStart(&GPTD6, &tim6_cfg);
+    gptStartOneShot(&GPTD6, 1000);  /* 1000 ms, since frequency is 1kHz */
+    while (!timeoutFlag) {
+        if (measurement_getEndswitch() == PRESSED) {
+            break;
+        }
+    }
+    _motorBreak();
+    gptStop(&GPTD6);
+    if (timeoutFlag) {
+        timeoutFlag = false;
+        return pcuFAIL;
+    }
+    return pcuSUCCESS;
 }
 
 pcu_returncode_e powerHdd(void) {

@@ -117,16 +117,33 @@ static void cmd_unpowerBcu(BaseSequentialStream *chp, int argc, char *argv[]) {
     unpowerBcu();
 }
 
+static void cmd_dock(BaseSequentialStream *chp, int argc, char *argv[]) {
+    UNUSED_PARAM(chp);
+    UNUSED_PARAM(argc);
+    UNUSED_PARAM(argv);
+    putIntoOutputMailbox("docking not implemented!");
+    //dock();
+}
+
+static void cmd_undock(BaseSequentialStream *chp, int argc, char *argv[]) {
+    UNUSED_PARAM(chp);
+    UNUSED_PARAM(argc);
+    UNUSED_PARAM(argv);
+    undock();
+}
+
 static const ShellCommand commands[] = {
         {"led_on",                 cmd_led_on},
         {"led_off",                cmd_led_off},
         {"current_date",           cmd_current_date},
         {"get_measurement_values", cmd_get_measurement_values},
         {"get_endswitch",          cmd_get_endswitch},
-        {"power",                  cmd_powerHdd},
-        {"unpower",                cmd_unpowerHdd},
+        {"power_hdd",              cmd_powerHdd},
+        {"unpower_hdd",            cmd_unpowerHdd},
         {"power_bcu",              cmd_powerBcu},
         {"unpower_bcu",            cmd_unpowerBcu},
+        {"dock",                   cmd_dock},
+        {"undock",                 cmd_undock},
         {NULL, NULL}
 };
 
