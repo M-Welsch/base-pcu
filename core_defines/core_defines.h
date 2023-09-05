@@ -6,6 +6,9 @@
 
 
 typedef enum {
+    pcuTIMEOUT = -10,
+    pcuOVERCURRENT = -9,
+    pcu_dockingState0_Docked = -8,
     pcu_dockingState7_12vFloating = -7,
     pcu_dockingState6_5vFloating = -6,
     pcu_dockingState5_allDocked5vOn = -5,

@@ -122,14 +122,20 @@ static void cmd_dock(BaseSequentialStream *chp, int argc, char *argv[]) {
     UNUSED_PARAM(argc);
     UNUSED_PARAM(argv);
     putIntoOutputMailbox("docking not implemented!");
-    //dock();
+    pcu_returncode_e success = dock();
+    if (success == pcuSUCCESS) {
+        putIntoOutputMailbox("docked successfully!");
+    }
 }
 
 static void cmd_undock(BaseSequentialStream *chp, int argc, char *argv[]) {
     UNUSED_PARAM(chp);
     UNUSED_PARAM(argc);
     UNUSED_PARAM(argv);
-    undock();
+    pcu_returncode_e success = undock();
+    if (success == pcuSUCCESS) {
+        putIntoOutputMailbox("undocked successfully!");
+    }
 }
 
 static const ShellCommand commands[] = {

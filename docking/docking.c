@@ -1,6 +1,8 @@
 #include "docking.h"
 #include "hal.h"
 #include "measurement.h"
+#include "bcuCommunication.h"
+#include "chprintf.h"
 
 static bool timeoutFlag = false;
 
@@ -32,28 +34,41 @@ static inline void _motorBreak(void) {
 }
 
 static inline bool _motorOvercurrent(uint16_t motor_current_measurement_value) {
-    return motor_current_measurement_value > 100;
+    return motor_current_measurement_value > 250;
 }
 
 static inline pcu_returncode_e _dockingState(uint16_t sense) {
-    // implement
+    if (sense > 3000) {
+        return pcu_dockingState1_Undocked;
+    }
     return pcu_dockingState2_allDockedPwrOff;
 }
 
-pcu_returncode_e dock(void) {
+pcu_returncode_e dock_(void) {
     _motorDocking();
     measurementValues_t values;
     pcu_returncode_e retval = pcuFAIL;
     pcu_returncode_e dockingState = pcu_dockingState1_Undocked;
-    while (true) {  // check for timeout here
+    uint16_t counter = 1000;
+    while (counter) {  // check for timeout here
         measurement_getValues(&values);
+        static char buffer[32];
+        chsnprintf(buffer, 32, "i=%i", values.imotor_prot);
+        sendToBcu(buffer);
+        static uint16_t overcurrent_count = 0;
         if (_motorOvercurrent(values.imotor_prot)) {
-            break;
+            overcurrent_count++;
+            if (overcurrent_count > 3) {
+                retval = pcuOVERCURRENT;
+                break;
+            }
         }
         dockingState = _dockingState(values.stator_supply_sense);
         if (dockingState != pcu_dockingState1_Undocked) {
             break;
         }
+        counter--;
+        chThdSleepMilliseconds(10);
     }
     _motorBreak();
 
@@ -67,23 +82,75 @@ pcu_returncode_e dock(void) {
     return retval;
 }
 
+
+pcu_returncode_e dock(void) {
+    _motorDocking();
+    pcu_returncode_e retval = pcuSUCCESS;
+    uint16_t counter = 130;
+    pcu_returncode_e dockingState = pcu_dockingState1_Undocked;
+    while (counter) {
+        measurementValues_t values;
+        measurement_getValues(&values);
+        dockingState = _dockingState(values.stator_supply_sense);
+        if (dockingState != pcu_dockingState1_Undocked) {
+            break;
+        }
+        static char buffer[32];
+        chsnprintf(buffer, 32, "i=%i", values.imotor_prot);
+        sendToBcu(buffer);
+        static uint16_t overcurrent_count = 0;
+        if (_motorOvercurrent(values.imotor_prot)) {
+            overcurrent_count++;
+            if (overcurrent_count > 3) {
+                retval = pcuOVERCURRENT;
+                break;
+            }
+        }
+        else {
+            overcurrent_count = 0;
+        }
+        chThdSleepMilliseconds(10);
+        counter--;
+    }
+    _motorBreak();
+    if (!counter) {
+        return pcuTIMEOUT;
+    }
+    return retval;
+}
+
 pcu_returncode_e undock(void) {
     _motorUndocking();
-    GPTD6.tim->CNT = 0;
-    gptStart(&GPTD6, &tim6_cfg);
-    gptStartOneShot(&GPTD6, 1000);  /* 1000 ms, since frequency is 1kHz */
-    while (!timeoutFlag) {
+    pcu_returncode_e retval = pcuSUCCESS;
+    uint16_t counter = 130;
+    while (counter) {
         if (measurement_getEndswitch() == PRESSED) {
             break;
         }
+        measurementValues_t values;
+        measurement_getValues(&values);
+        static char buffer[32];
+        chsnprintf(buffer, 32, "i=%i", values.imotor_prot);
+        sendToBcu(buffer);
+        static uint16_t overcurrent_count = 0;
+        if (_motorOvercurrent(values.imotor_prot)) {
+            overcurrent_count++;
+            if (overcurrent_count > 3) {
+                retval = pcuOVERCURRENT;
+                break;
+            }
+        }
+        else {
+            overcurrent_count = 0;
+        }
+        chThdSleepMilliseconds(10);
+        counter--;
     }
     _motorBreak();
-    gptStop(&GPTD6);
-    if (timeoutFlag) {
-        timeoutFlag = false;
-        return pcuFAIL;
+    if (!counter) {
+        return pcuTIMEOUT;
     }
-    return pcuSUCCESS;
+    return retval;
 }
 
 pcu_returncode_e powerHdd(void) {
