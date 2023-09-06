@@ -5,18 +5,13 @@
 #include "chprintf.h"
 
 static bool timeoutFlag = false;
+static pcu_dockingstate_e dockingState = pcu_dockingState1_undocked;
+static float currentLog[256];
 
 static void _set_timeoutFlag(GPTDriver *gptp) {
     UNUSED_PARAM(gptp);
     timeoutFlag = true;
 }
-
-const GPTConfig tim6_cfg = {
-    .frequency = 1000,                  /**< Frequency 1kHz */
-    .callback = _set_timeoutFlag,
-    .cr2 = 0U,
-    .dier = 0U
-};
 
 static inline void _motorDocking(void) {
     palSetLine(LINE_MOTOR_DRV1);
@@ -37,62 +32,51 @@ static inline bool _motorOvercurrent(uint16_t motor_current_measurement_value) {
     return motor_current_measurement_value > 250;
 }
 
-static inline pcu_returncode_e _dockingState(uint16_t sense) {
-    if (sense > 3000) {
-        return pcu_dockingState1_Undocked;
-    }
-    return pcu_dockingState2_allDockedPwrOff;
-}
-
-pcu_returncode_e dock_(void) {
-    _motorDocking();
-    measurementValues_t values;
-    pcu_returncode_e retval = pcuFAIL;
-    pcu_returncode_e dockingState = pcu_dockingState1_Undocked;
-    uint16_t counter = 1000;
-    while (counter) {  // check for timeout here
-        measurement_getValues(&values);
-        static char buffer[32];
-        chsnprintf(buffer, 32, "i=%i", values.imotor_prot);
-        sendToBcu(buffer);
-        static uint16_t overcurrent_count = 0;
-        if (_motorOvercurrent(values.imotor_prot)) {
-            overcurrent_count++;
-            if (overcurrent_count > 3) {
-                retval = pcuOVERCURRENT;
-                break;
-            }
+static inline pcu_dockingstate_e _dockingState(uint16_t sense) {
+    if (sense > 3300) {
+        if (measurement_getEndswitch() == PRESSED) {
+            return pcu_dockingState1_undocked;
         }
-        dockingState = _dockingState(values.stator_supply_sense);
-        if (dockingState != pcu_dockingState1_Undocked) {
-            break;
+        else {
+            return pcu_dockingState9_inbetween;
         }
-        counter--;
-        chThdSleepMilliseconds(10);
     }
-    _motorBreak();
-
-    if (dockingState == pcu_dockingState2_allDockedPwrOff) {
-        retval = pcuSUCCESS;
+    else if (sense > 3000) {
+        return pcu_dockingState3_allDockedPwrOn;
+    }
+    else if (sense > 2500) {
+        return pcu_dockingState4_allDocked12vOn;
+    }
+    else if (sense > 1700) {
+        return pcu_dockingState5_allDocked5vOn;
+    }
+    else if (sense < 1100) {
+        return pcu_dockingState2_allDockedPwrOff;
     }
     else {
-        retval = dockingState;
+        return pcu_dockingState_unknown;
     }
+}
 
-    return retval;
+static void _updateDockingState(float *currentValue) {
+    measurementValues_t values;
+    measurement_getValues(&values);
+    if (currentValue != NULL) {
+        *currentValue = values.stator_supply_sense;
+    }
+    dockingState = _dockingState(values.stator_supply_sense);
 }
 
 
 pcu_returncode_e dock(void) {
     _motorDocking();
     pcu_returncode_e retval = pcuSUCCESS;
-    uint16_t counter = 130;
-    pcu_returncode_e dockingState = pcu_dockingState1_Undocked;
+    uint16_t counter = MAXIMUM_DOCKING_TIME_10MS_TICKS;
     while (counter) {
         measurementValues_t values;
         measurement_getValues(&values);
         dockingState = _dockingState(values.stator_supply_sense);
-        if (dockingState != pcu_dockingState1_Undocked) {
+        if ((dockingState != pcu_dockingState1_undocked) && (dockingState != pcu_dockingState9_inbetween)) {
             break;
         }
         static char buffer[32];
@@ -122,7 +106,7 @@ pcu_returncode_e dock(void) {
 pcu_returncode_e undock(void) {
     _motorUndocking();
     pcu_returncode_e retval = pcuSUCCESS;
-    uint16_t counter = 130;
+    uint16_t counter = MAXIMUM_DOCKING_TIME_10MS_TICKS;
     while (counter) {
         if (measurement_getEndswitch() == PRESSED) {
             break;
@@ -159,7 +143,13 @@ pcu_returncode_e powerHdd(void) {
     palClearLine(LINE_SW_HDD_ON);
     measurementValues_t values;
     measurement_getValues(&values);
-    return _dockingState(values.stator_supply_sense);
+    dockingState = _dockingState(values.stator_supply_sense);
+    if (dockingState == pcu_dockingState3_allDockedPwrOn) {
+        return pcuSUCCESS;
+    }
+    else {
+        return pcuFAIL;
+    }
 }
 
 pcu_returncode_e unpowerHdd(void) {
@@ -185,3 +175,7 @@ pcu_returncode_e unpowerBcu(void) {
     return pcuSUCCESS;
 }
 
+pcu_dockingstate_e getDockingState(void) {
+    _updateDockingState(NULL);
+    return dockingState;
+}

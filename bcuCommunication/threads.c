@@ -121,10 +121,12 @@ static void cmd_dock(BaseSequentialStream *chp, int argc, char *argv[]) {
     UNUSED_PARAM(chp);
     UNUSED_PARAM(argc);
     UNUSED_PARAM(argv);
-    putIntoOutputMailbox("docking not implemented!");
     pcu_returncode_e success = dock();
     if (success == pcuSUCCESS) {
         putIntoOutputMailbox("docked successfully!");
+    }
+    else {
+        putIntoOutputMailbox("docking failed!");
     }
 }
 
@@ -136,6 +138,60 @@ static void cmd_undock(BaseSequentialStream *chp, int argc, char *argv[]) {
     if (success == pcuSUCCESS) {
         putIntoOutputMailbox("undocked successfully!");
     }
+    else {
+        putIntoOutputMailbox("undocking failed!");
+    }
+}
+
+static void cmd_get_dockingstate(BaseSequentialStream *chp, int argc, char *argv[]) {
+    UNUSED_PARAM(chp);
+    UNUSED_PARAM(argc);
+    UNUSED_PARAM(argv);
+    pcu_dockingstate_e dockingState = getDockingState();
+    if (dockingState == pcu_dockingState0_docked) {
+        putIntoOutputMailbox("pcu_dockingState0_docked");
+    }
+    else if (dockingState == pcu_dockingState1_undocked) {
+        putIntoOutputMailbox("pcu_dockingState1_undocked");
+    }
+    else if (dockingState == pcu_dockingState2_allDockedPwrOff) {
+        putIntoOutputMailbox("pcu_dockingState2_allDockedPwrOff");
+    }
+    else if (dockingState == pcu_dockingState3_allDockedPwrOn){
+        putIntoOutputMailbox("pcu_dockingState3_allDockedPwrOn");
+    }
+    else if (dockingState == pcu_dockingState4_allDocked12vOn) {
+        putIntoOutputMailbox("pcu_dockingState4_allDocked12vOn");
+    }
+    else if (dockingState == pcu_dockingState5_allDocked5vOn) {
+        putIntoOutputMailbox("pcu_dockingState5_allDocked5vOn");
+    }
+    else if (dockingState == pcu_dockingState6_5vFloating) {
+        putIntoOutputMailbox("pcu_dockingState6_5vFloating");
+    }
+    else if (dockingState == pcu_dockingState7_12vFloating) {
+        putIntoOutputMailbox("pcu_dockingState7_12vFloating");
+    }
+    else if (dockingState == pcu_dockingState9_inbetween) {
+        putIntoOutputMailbox("pcu_dockingState9_inbetween");
+    }
+    else if (dockingState == pcu_dockingState_unknown){
+        putIntoOutputMailbox("pcu_dockingState_unknown");
+    }
+    else {
+        putIntoOutputMailbox("no idea. This shouldn't happen");
+    }
+}
+
+static void cmd_get_stator_supply_sense(BaseSequentialStream *chp, int argc, char *argv[]) {
+    UNUSED_PARAM(chp);
+    UNUSED_PARAM(argc);
+    UNUSED_PARAM(argv);
+    measurementValues_t values;
+    measurement_getValues(&values);
+    static char buffer[32];
+    chsnprintf(buffer, 32, "%i", values.stator_supply_sense);
+    putIntoOutputMailbox(buffer);
 }
 
 static const ShellCommand commands[] = {
@@ -150,6 +206,8 @@ static const ShellCommand commands[] = {
         {"unpower_bcu",            cmd_unpowerBcu},
         {"dock",                   cmd_dock},
         {"undock",                 cmd_undock},
+        {"get_dockingstate",       cmd_get_dockingstate},
+        {"get_status_supply_sense",cmd_get_stator_supply_sense},
         {NULL, NULL}
 };
 
