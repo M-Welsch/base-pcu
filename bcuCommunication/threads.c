@@ -128,6 +128,7 @@ static void cmd_dock(BaseSequentialStream *chp, int argc, char *argv[]) {
     else {
         putIntoOutputMailbox("docking failed!");
     }
+//    testPwm();
 }
 
 static void cmd_undock(BaseSequentialStream *chp, int argc, char *argv[]) {
@@ -194,6 +195,26 @@ static void cmd_get_stator_supply_sense(BaseSequentialStream *chp, int argc, cha
     putIntoOutputMailbox(buffer);
 }
 
+static void cmd_docking_getCurrentLog(BaseSequentialStream *chp, int argc, char *argv[]) {
+    UNUSED_PARAM(chp);
+    UNUSED_PARAM(argc);
+    UNUSED_PARAM(argv);
+    uint8_t msgCounter = 0;
+    static char buffer[MAXIMUM_DOCKING_TIME_10MS_TICKS*4];
+    for(uint16_t strcnt = 0; strcnt < MAXIMUM_DOCKING_TIME_10MS_TICKS*4; strcnt++) {
+        buffer[strcnt] = '\0';
+    }
+    uint16_t currentValue = 0;
+    for(uint16_t counter = 0; counter < MAXIMUM_DOCKING_TIME_10MS_TICKS; counter++) {
+        currentValue = getFromCurrentLog(counter);
+        if (currentValue == 0) {
+            break;
+        }
+        chsnprintf(buffer, MAXIMUM_DOCKING_TIME_10MS_TICKS*4, "%s%i,", buffer, getFromCurrentLog(counter));
+    }
+    putIntoOutputMailbox(buffer);
+}
+
 static const ShellCommand commands[] = {
         {"led_on",                 cmd_led_on},
         {"led_off",                cmd_led_off},
@@ -208,6 +229,7 @@ static const ShellCommand commands[] = {
         {"undock",                 cmd_undock},
         {"get_dockingstate",       cmd_get_dockingstate},
         {"get_status_supply_sense",cmd_get_stator_supply_sense},
+        {"get_docking_current_log",cmd_docking_getCurrentLog},
         {NULL, NULL}
 };
 

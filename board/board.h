@@ -289,7 +289,7 @@
                                      PIN_MODE_OUTPUT(GPIOA_LED_GREEN) |     \
                                      PIN_MODE_INPUT(GPIOA_ARD_D12) |        \
                                      PIN_MODE_INPUT(GPIOA_ARD_D11) |        \
-                                     PIN_MODE_OUTPUT(MOTOR_DRV1) |         \
+                                     PIN_MODE_ALTERNATE(MOTOR_DRV1) |         \
                                      PIN_MODE_OUTPUT(MOTOR_DRV2) |         \
                                      PIN_MODE_INPUT(GPIOA_ARD_D2) |         \
                                      PIN_MODE_INPUT(GPIOA_PIN11) |          \
@@ -368,8 +368,8 @@
                                      PIN_AFIO_AF(GPIOA_ARD_A2, 0U) |        \
                                      PIN_AFIO_AF(GPIOA_LED_GREEN, 0U) |     \
                                      PIN_AFIO_AF(GPIOA_ARD_D12, 0U) |       \
-                                     PIN_AFIO_AF(GPIOA_ARD_D11, 0U))
-#define VAL_GPIOA_AFRH              (PIN_AFIO_AF(GPIOA_ARD_D7, 0U) |        \
+                                     PIN_AFIO_AF(MOTOR_DRV2, 0U))
+#define VAL_GPIOA_AFRH              (PIN_AFIO_AF(MOTOR_DRV1, 2U) |        \
                                      PIN_AFIO_AF(GPIOA_ARD_D8, 0U) |        \
                                      PIN_AFIO_AF(GPIOA_ARD_D2, 0U) |        \
                                      PIN_AFIO_AF(GPIOA_PIN11, 0U) |         \
