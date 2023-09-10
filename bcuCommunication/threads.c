@@ -200,17 +200,17 @@ static void cmd_docking_getCurrentLog(BaseSequentialStream *chp, int argc, char 
     UNUSED_PARAM(argc);
     UNUSED_PARAM(argv);
     uint8_t msgCounter = 0;
-    static char buffer[MAXIMUM_DOCKING_TIME_10MS_TICKS*4];
-    for(uint16_t strcnt = 0; strcnt < MAXIMUM_DOCKING_TIME_10MS_TICKS*4; strcnt++) {
+    static char buffer[CURRENT_LOG_BUFFER_SIZE * 5];
+    for(uint16_t strcnt = 0; strcnt < CURRENT_LOG_BUFFER_SIZE * 4; strcnt++) {
         buffer[strcnt] = '\0';
     }
     uint16_t currentValue = 0;
-    for(uint16_t counter = 0; counter < MAXIMUM_DOCKING_TIME_10MS_TICKS; counter++) {
+    for(uint16_t counter = 0; counter < CURRENT_LOG_BUFFER_SIZE; counter++) {
         currentValue = getFromCurrentLog(counter);
         if (currentValue == 0) {
             break;
         }
-        chsnprintf(buffer, MAXIMUM_DOCKING_TIME_10MS_TICKS*4, "%s%i,", buffer, getFromCurrentLog(counter));
+        chsnprintf(buffer, CURRENT_LOG_BUFFER_SIZE * 4, "%s%i,", buffer, getFromCurrentLog(counter));
     }
     putIntoOutputMailbox(buffer);
 }

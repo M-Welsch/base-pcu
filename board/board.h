@@ -88,19 +88,17 @@
 #define GPIOA_PIN15                 15U
 
 #define GPIOB_ARD_A3                0U
-#define GPIOB_ADC1_IN8              0U
 #define GPIOB_PIN1                  1U
 #define GPIOB_PIN2                  2U
 #define nENDSWITCH_UNDOCKED         2U
 #define GPIOB_SWO                   3U
-#define GPIOB_ARD_D3                3U
 #define GPIOB_ARD_D5                4U
 #define GPIOB_ARD_D4                5U
 #define GPIOB_ARD_D10               6U
 #define GPIOB_PIN7                  7U
-#define GPIOB_ARD_D15               8U
-#define GPIOB_ARD_D14               9U
-#define GPIPB_THT_LED_YELLOW                10U
+#define nDOCKED_SENSE2               8U
+#define nDOCKED_SENSE               9U
+#define GPIPB_THT_LED_YELLOW        10U
 #define GPIOB_PIN11                 11U
 #define GPIOB_PIN12                 12U
 #define GPIOB_PIN13                 13U
@@ -205,8 +203,8 @@
 #define LINE_ARD_D5                 PAL_LINE(GPIOB, 4U)
 #define LINE_ARD_D4                 PAL_LINE(GPIOB, 5U)
 #define LINE_ARD_D10                PAL_LINE(GPIOB, 6U)
-#define LINE_ARD_D15                PAL_LINE(GPIOB, 8U)
-#define LINE_ARD_D14                PAL_LINE(GPIOB, 9U)
+#define LINE_nDOCKED2               PAL_LINE(GPIOB, 8U)
+#define LINE_nDOCKED                PAL_LINE(GPIOB, 9U)
 #define LINE_ARD_D6                 PAL_LINE(GPIOB, 10U)
 #define LINE_SW_HDD_ON              PAL_LINE(GPIOC, SW_HDD_ON)
 #define LINE_SW_HDD_OFF             PAL_LINE(GPIOC, SW_HDD_OFF)
@@ -406,8 +404,8 @@
                                      PIN_MODE_INPUT(GPIOB_ARD_D4) |         \
                                      PIN_MODE_INPUT(GPIOB_ARD_D10) |        \
                                      PIN_MODE_INPUT(GPIOB_PIN7) |           \
-                                     PIN_MODE_INPUT(GPIOB_ARD_D15) |        \
-                                     PIN_MODE_INPUT(GPIOB_ARD_D14) |        \
+                                     PIN_MODE_INPUT(nDOCKED_SENSE2) |        \
+                                     PIN_MODE_INPUT(nDOCKED_SENSE) |        \
                                      PIN_MODE_OUTPUT(GPIPB_THT_LED_YELLOW) |         \
                                      PIN_MODE_INPUT(GPIOB_PIN11) |          \
                                      PIN_MODE_INPUT(GPIOB_PIN12) |          \
@@ -416,14 +414,14 @@
                                      PIN_MODE_INPUT(GPIOB_PIN15))
 #define VAL_GPIOB_OTYPER            (PIN_OTYPE_PUSHPULL(GPIOB_ARD_A3) |     \
                                      PIN_OTYPE_PUSHPULL(GPIOB_PIN1) |       \
-                                     PIN_OTYPE_PUSHPULL(GPIOB_PIN2) |       \
+                                     PIN_OTYPE_PUSHPULL(nENDSWITCH_UNDOCKED) |       \
                                      PIN_OTYPE_PUSHPULL(GPIOB_SWO) |        \
                                      PIN_OTYPE_PUSHPULL(GPIOB_ARD_D5) |     \
                                      PIN_OTYPE_PUSHPULL(GPIOB_ARD_D4) |     \
                                      PIN_OTYPE_PUSHPULL(GPIOB_ARD_D10) |    \
                                      PIN_OTYPE_PUSHPULL(GPIOB_PIN7) |       \
-                                     PIN_OTYPE_PUSHPULL(GPIOB_ARD_D15) |    \
-                                     PIN_OTYPE_PUSHPULL(GPIOB_ARD_D14) |    \
+                                     PIN_OTYPE_PUSHPULL(nDOCKED_SENSE2) |    \
+                                     PIN_OTYPE_PUSHPULL(nDOCKED_SENSE) |    \
                                      PIN_OTYPE_PUSHPULL(GPIPB_THT_LED_YELLOW) |     \
                                      PIN_OTYPE_PUSHPULL(GPIOB_PIN11) |      \
                                      PIN_OTYPE_PUSHPULL(GPIOB_PIN12) |      \
@@ -438,8 +436,8 @@
                                      PIN_OSPEED_HIGH(GPIOB_ARD_D4) |        \
                                      PIN_OSPEED_HIGH(GPIOB_ARD_D10) |       \
                                      PIN_OSPEED_HIGH(GPIOB_PIN7) |          \
-                                     PIN_OSPEED_HIGH(GPIOB_ARD_D15) |       \
-                                     PIN_OSPEED_HIGH(GPIOB_ARD_D14) |       \
+                                     PIN_OSPEED_HIGH(nDOCKED_SENSE2) |       \
+                                     PIN_OSPEED_HIGH(nDOCKED_SENSE) |       \
                                      PIN_OSPEED_HIGH(GPIPB_THT_LED_YELLOW) |        \
                                      PIN_OSPEED_HIGH(GPIOB_PIN11) |         \
                                      PIN_OSPEED_HIGH(GPIOB_PIN12) |         \
@@ -454,8 +452,8 @@
                                      PIN_PUPDR_PULLUP(GPIOB_ARD_D4) |       \
                                      PIN_PUPDR_PULLUP(GPIOB_ARD_D10) |      \
                                      PIN_PUPDR_PULLUP(GPIOB_PIN7) |         \
-                                     PIN_PUPDR_PULLUP(GPIOB_ARD_D15) |      \
-                                     PIN_PUPDR_PULLUP(GPIOB_ARD_D14) |      \
+                                     PIN_PUPDR_PULLUP(nDOCKED_SENSE2) |      \
+                                     PIN_PUPDR_PULLUP(nDOCKED_SENSE) |      \
                                      PIN_PUPDR_FLOATING(GPIPB_THT_LED_YELLOW) |       \
                                      PIN_PUPDR_PULLUP(GPIOB_PIN11) |        \
                                      PIN_PUPDR_PULLUP(GPIOB_PIN12) |        \
@@ -470,8 +468,8 @@
                                      PIN_ODR_HIGH(GPIOB_ARD_D4) |           \
                                      PIN_ODR_HIGH(GPIOB_ARD_D10) |          \
                                      PIN_ODR_HIGH(GPIOB_PIN7) |             \
-                                     PIN_ODR_HIGH(GPIOB_ARD_D15) |          \
-                                     PIN_ODR_HIGH(GPIOB_ARD_D14) |          \
+                                     PIN_ODR_HIGH(nDOCKED_SENSE2) |          \
+                                     PIN_ODR_HIGH(nDOCKED_SENSE) |          \
                                      PIN_ODR_HIGH(GPIPB_THT_LED_YELLOW) |           \
                                      PIN_ODR_HIGH(GPIOB_PIN11) |            \
                                      PIN_ODR_HIGH(GPIOB_PIN12) |            \
@@ -486,8 +484,8 @@
                                      PIN_AFIO_AF(GPIOB_ARD_D4, 0U) |        \
                                      PIN_AFIO_AF(GPIOB_ARD_D10, 0U) |       \
                                      PIN_AFIO_AF(GPIOB_PIN7, 0U))
-#define VAL_GPIOB_AFRH              (PIN_AFIO_AF(GPIOB_ARD_D15, 0U) |       \
-                                     PIN_AFIO_AF(GPIOB_ARD_D14, 0U) |       \
+#define VAL_GPIOB_AFRH              (PIN_AFIO_AF(nDOCKED_SENSE2, 0U) |       \
+                                     PIN_AFIO_AF(nDOCKED_SENSE, 0U) |       \
                                      PIN_AFIO_AF(GPIPB_THT_LED_YELLOW, 0U) |        \
                                      PIN_AFIO_AF(GPIOB_PIN11, 0U) |         \
                                      PIN_AFIO_AF(GPIOB_PIN12, 0U) |         \

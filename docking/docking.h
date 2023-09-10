@@ -4,7 +4,10 @@
 #include <stdint-gcc.h>
 #include "core_defines.h"
 
-#define MAXIMUM_DOCKING_TIME_10MS_TICKS 200
+#define MAXIMUM_DOCKING_TIME_1MS_TICKS 2000
+#define MAXIMUM_OVERCURRENT_INRUSH_SAMPLES 100
+#define MAXIMUM_CONSECUTIVE_OVERCURRENT_SAMPLES 10
+#define CURRENT_LOG_BUFFER_SIZE 200
 
 pcu_returncode_e dockingInit(void);
 

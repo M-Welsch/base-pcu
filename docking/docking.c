@@ -5,7 +5,7 @@
 #include "chprintf.h"
 
 static pcu_dockingstate_e dockingState = pcu_dockingState1_undocked;
-static float currentLog[MAXIMUM_DOCKING_TIME_10MS_TICKS+1];
+static float currentLog[CURRENT_LOG_BUFFER_SIZE + 1];
 
 static void pwmpcb(PWMDriver *pwmp) {
     (void)pwmp;
@@ -48,10 +48,13 @@ static inline void _motorUndocking(void) {
     palSetLine(LINE_MOTOR_DRV2);
 }
 
+
+/**
+ * @details (0,0) leads to high-Z, (1,1) leads to break. See Datasheet (DRV8220) p.11 Table 8.3
+ */
 static inline void _motorBreak(void) {
-    pwmcnt_t dutycycle = (pwmcnt_t) 0;
-    pwmEnableChannel(&PWMD1, 0, PWM_PERCENTAGE_TO_WIDTH(&PWMD1, dutycycle));
-    palClearLine(LINE_MOTOR_DRV2);
+    pwmEnableChannel(&PWMD1, 0, PWM_PERCENTAGE_TO_WIDTH(&PWMD1, (pwmcnt_t) 10000));
+    palSetLine(LINE_MOTOR_DRV2);
 }
 
 pcu_returncode_e dockingInit(void) {
@@ -102,7 +105,7 @@ static void _updateDockingState(float *currentValue) {
 
 
 static void _clearCurrentLog(void) {
-    for (uint16_t ptr = 0; ptr < MAXIMUM_DOCKING_TIME_10MS_TICKS; ptr++) {
+    for (uint16_t ptr = 0; ptr < CURRENT_LOG_BUFFER_SIZE; ptr++) {
         currentLog[ptr] = 0.0f;
     }
 }
@@ -116,24 +119,22 @@ pcu_returncode_e dock(void) {
     _clearCurrentLog();
     _motorDocking();
     pcu_returncode_e retval = pcuSUCCESS;
-    uint16_t countdown = MAXIMUM_DOCKING_TIME_10MS_TICKS;
+    uint16_t countdown = MAXIMUM_DOCKING_TIME_1MS_TICKS;
     uint16_t counter = 0;
     while (countdown) {
-        counter = MAXIMUM_DOCKING_TIME_10MS_TICKS-countdown;
-        measurementValues_t values;
-        measurement_getValues(&values);
-        dockingState = _dockingState(values.stator_supply_sense);
-        if ((dockingState != pcu_dockingState1_undocked) && (dockingState != pcu_dockingState9_inbetween)) {
+        if (measurement_getDocked()) {
+            /* needs to push in a little deeper. 50ms delay pushes the connector fully into its mating part */
+            chThdSleepMilliseconds(40);
             break;
         }
-//        static char buffer[32];
-//        chsnprintf(buffer, 32, "i=%i", values.imotor_prot);
-//        sendToBcu(buffer);
-        currentLog[counter] = values.imotor_prot;
+        counter = MAXIMUM_DOCKING_TIME_1MS_TICKS - countdown;
+        measurementValues_t values;
+        measurement_getValues(&values);
+        // currentLog[counter] = values.imotor_prot;
         static uint16_t overcurrent_count = 0;
-        if (_motorOvercurrent(values.imotor_prot) && (counter > 10)) {
+        if (_motorOvercurrent(values.imotor_prot) && (counter > MAXIMUM_OVERCURRENT_INRUSH_SAMPLES)) {
             overcurrent_count++;
-            if (overcurrent_count > 3) {
+            if (overcurrent_count > MAXIMUM_CONSECUTIVE_OVERCURRENT_SAMPLES) {
                 retval = pcuOVERCURRENT;
                 break;
             }
@@ -141,7 +142,7 @@ pcu_returncode_e dock(void) {
         else {
             overcurrent_count = 0;
         }
-        chThdSleepMilliseconds(10);
+        chThdSleepMilliseconds(1);
         countdown--;
     }
     _motorBreak();
@@ -155,23 +156,20 @@ pcu_returncode_e undock(void) {
     _clearCurrentLog();
     _motorUndocking();
     pcu_returncode_e retval = pcuSUCCESS;
-    uint16_t countdown = MAXIMUM_DOCKING_TIME_10MS_TICKS;
+    uint16_t countdown = MAXIMUM_DOCKING_TIME_1MS_TICKS;
     uint16_t counter = 0;
     while (countdown) {
         if (measurement_getEndswitch() == PRESSED) {
             break;
         }
-        counter = MAXIMUM_DOCKING_TIME_10MS_TICKS - countdown;
+        counter = MAXIMUM_DOCKING_TIME_1MS_TICKS - countdown;
         measurementValues_t values;
         measurement_getValues(&values);
-//        static char buffer[32];
-//        chsnprintf(buffer, 32, "i=%i", values.imotor_prot);
-//        sendToBcu(buffer);
-        currentLog[counter] = values.imotor_prot;
+        // currentLog[counter] = values.imotor_prot;
         static uint16_t overcurrent_count = 0;
-        if (_motorOvercurrent(values.imotor_prot) && (counter > 10)) {
+        if (_motorOvercurrent(values.imotor_prot) && (counter > MAXIMUM_OVERCURRENT_INRUSH_SAMPLES)) {
             overcurrent_count++;
-            if (overcurrent_count > 3) {
+            if (overcurrent_count > MAXIMUM_CONSECUTIVE_OVERCURRENT_SAMPLES) {
                 retval = pcuOVERCURRENT;
                 break;
             }
@@ -179,7 +177,7 @@ pcu_returncode_e undock(void) {
         else {
             overcurrent_count = 0;
         }
-        chThdSleepMilliseconds(10);
+        chThdSleepMilliseconds(1);
         countdown--;
     }
     _motorBreak();
@@ -187,6 +185,15 @@ pcu_returncode_e undock(void) {
         return pcuTIMEOUT;
     }
     return retval;
+}
+
+pcu_returncode_e undock_(void) {
+    _motorUndocking();
+    while (measurement_getEndswitch() == NOT_PRESSED) {
+        ;
+    }
+    _motorBreak();
+    return pcuSUCCESS;
 }
 
 pcu_returncode_e powerHdd(void) {
