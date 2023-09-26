@@ -5,11 +5,16 @@
 #ifndef BASE_PCU_STATEMACHINE_H
 #define BASE_PCU_STATEMACHINE_H
 
+#include "ch.h"
+
 typedef enum {
   STATE_ACTIVE,
   STATE_SHUTDOWN_REQUESTED,
   STATE_DEEP_SLEEP,
   STATE_HMI
 } state_codes_e;
+
+void statemachine_mainloop(void);
+void statemachine_sendEvent(int event);
 
 #endif //BASE_PCU_STATEMACHINE_H

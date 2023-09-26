@@ -89,10 +89,12 @@ pcu_returncode_e alarmClock_getDateWakeup(RTCDateTime* timespec) {
 
 pcu_returncode_e alarmClock_setDateBackup(const RTCDateTime* timespec) {
     date_backup = *timespec;
+    return pcuSUCCESS;
 }
 
 pcu_returncode_e alarmClock_getDateBackup(RTCDateTime* timespec) {
     *timespec = date_backup;
+    return pcuSUCCESS;
 }
 
 void alarmClock_getDate(char* buffer) {
