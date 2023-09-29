@@ -34,8 +34,8 @@ int STATE_ACTIVE_state(void) {
 int STATE_SHUTDOWN_REQUESTED_state(void) {
     state_codes_e next_state = STATE_DEEP_SLEEP;
     sendToBcu("shutdown_requesed state");
-    eventmask_t evt = chEvtWaitAnyTimeout(ALL_EVENTS, TIME_MS2I(300000));
-    if (evt & EVENT_SHUTDOWN_ABORTED) {
+    eventmask_t evt = chEvtWaitAnyTimeout(ALL_EVENTS, TIME_MS2I(5000));
+    if (evt & (EVENT_SHUTDOWN_ABORTED | EVENT_WAKEUP_REQUESTED_BY_ALARMCLOCK )) {
         next_state = STATE_ACTIVE;
     }
     return next_state;
@@ -47,22 +47,33 @@ int STATE_SHUTDOWN_REQUESTED_state(void) {
 int STATE_DEEP_SLEEP_state(void) {
     state_codes_e next_state = STATE_DEEP_SLEEP;
     sendToBcu("deep sleep state");
-    while(_event == 0) {
-        chThdSleepMilliseconds(10);
-    }
-    if (_event & EVENT_WAKEUP_REQUESTED_BY_ALARMCLOCK) {
+    eventmask_t evt = chEvtWaitAnyTimeout(ALL_EVENTS, TIME_MS2I(1000));
+    if (evt & EVENT_WAKEUP_REQUESTED_BY_ALARMCLOCK) {
         next_state = STATE_ACTIVE;
     }
-    else if (_event & (EVENT_BUTTON_0_PRESSED | EVENT_BUTTON_1_PRESSED)) {
+    else if (evt & (EVENT_BUTTON_0_PRESSED | EVENT_BUTTON_1_PRESSED)) {
         next_state = STATE_HMI;
     }
-    _event = 0;
+    else {
+        next_state = STATE_ACTIVE;  // just for development!
+    }
     return next_state;
 }
 
 int STATE_HMI_state(void) {
-    sendToBcu("hmi state with ff to active");
-    return STATE_ACTIVE;
+    state_codes_e next_state = STATE_DEEP_SLEEP;
+    sendToBcu("hmi state");
+    eventmask_t evt = chEvtWaitAnyTimeout(ALL_EVENTS, TIME_MS2I(60000));
+    if (evt & EVENT_WAKEUP_REQUESTED_BY_ALARMCLOCK) {
+        next_state = STATE_ACTIVE;
+    }
+    else if (evt & EVENT_BUTTON_0_PRESSED) {
+        sendToBcu("Button 0 pressed");
+    }
+    else if (evt & EVENT_BUTTON_1_PRESSED) {
+        sendToBcu("Button 1 pressed");
+    }
+    return next_state;
 }
 
 /* array and enum must be in sync! */
@@ -161,6 +172,7 @@ thread_t *uart_thread;
 
 static THD_WORKING_AREA(waUARTThread, 128);
 static THD_FUNCTION(UARTThread, arg) {
+    UNUSED_PARAM(arg);
 
     /* Thread activity.*/
     while (true) {
@@ -171,10 +183,6 @@ static THD_FUNCTION(UARTThread, arg) {
 void statemachine_init(void) {
     uart_thread = chThdCreateStatic(waUARTThread, sizeof(waUARTThread),
                                     NORMALPRIO + 1, UARTThread, NULL);
-}
-
-void statemachine_sendEvent_(int event) {
-    _event = event;
 }
 
 void statemachine_sendEvent(eventmask_t events) {
