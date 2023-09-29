@@ -19,13 +19,10 @@ volatile int _event = 0;
 int STATE_ACTIVE_state(void) {
     state_codes_e next_state = STATE_ACTIVE;
     sendToBcu("active state");
-    while (_event == 0) {
-        chThdSleepMilliseconds(10);
-    }
-    if (_event & EVENT_SHUTDOWN_REQUESTED) {
+    eventmask_t evt = chEvtWaitAny(ALL_EVENTS);
+    if (evt & EVENT_SHUTDOWN_REQUESTED) {
         next_state = STATE_SHUTDOWN_REQUESTED;
     }
-    _event = 0;
     return next_state;
 }
 
@@ -37,15 +34,10 @@ int STATE_ACTIVE_state(void) {
 int STATE_SHUTDOWN_REQUESTED_state(void) {
     state_codes_e next_state = STATE_DEEP_SLEEP;
     sendToBcu("shutdown_requesed state");
-    uint16_t counter = 0;
-    while (_event == 0 && counter < 30000) {
-        chThdSleepMilliseconds(10);
-        counter++;
-    }
-    if (_event & EVENT_SHUTDOWN_ABORTED) {
+    eventmask_t evt = chEvtWaitAnyTimeout(ALL_EVENTS, TIME_MS2I(300000));
+    if (evt & EVENT_SHUTDOWN_ABORTED) {
         next_state = STATE_ACTIVE;
     }
-    _event = 0;
     return next_state;
 }
 
@@ -165,6 +157,26 @@ void statemachine_mainloop(void) {
     }
 }
 
-void statemachine_sendEvent(int event) {
+thread_t *uart_thread;
+
+static THD_WORKING_AREA(waUARTThread, 128);
+static THD_FUNCTION(UARTThread, arg) {
+
+    /* Thread activity.*/
+    while (true) {
+        statemachine_mainloop();
+    }
+}
+
+void statemachine_init(void) {
+    uart_thread = chThdCreateStatic(waUARTThread, sizeof(waUARTThread),
+                                    NORMALPRIO + 1, UARTThread, NULL);
+}
+
+void statemachine_sendEvent_(int event) {
     _event = event;
+}
+
+void statemachine_sendEvent(eventmask_t events) {
+    chEvtSignal(uart_thread, events);
 }

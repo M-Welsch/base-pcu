@@ -15,6 +15,7 @@ typedef enum {
 } state_codes_e;
 
 void statemachine_mainloop(void);
-void statemachine_sendEvent(int event);
+void statemachine_init(void);
+void statemachine_sendEvent(eventmask_t event);
 
 #endif //BASE_PCU_STATEMACHINE_H

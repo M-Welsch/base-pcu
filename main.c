@@ -33,9 +33,11 @@ int main(void) {
     bcuCommunication_init();
     alarmClock_init();
     measurement_init();
+    statemachine_init();
     adcSTM32SetCCR(ADC_CCR_TSEN | ADC_CCR_VREFEN);
 
     while (true) {
-        statemachine_mainloop();
+        //statemachine_mainloop();
+        chThdSleepMilliseconds(10000);
     }
 }
