@@ -207,6 +207,11 @@ static pcu_returncode_e _cmdShutdown(BaseSequentialStream *chp, int argc, char *
     return pcuSUCCESS;
 }
 
+static pcu_returncode_e _cmdWakeup(void) {
+    statemachine_sendEvent(EVENT_WAKEUP_REQUESTED_BY_USER);
+    return pcuSUCCESS;
+}
+
 static void cmd(BaseSequentialStream *chp, int argc, char *argv[]) {
     if (argc < 1) {
         _argument_missing(chp);
@@ -225,6 +230,9 @@ static void cmd(BaseSequentialStream *chp, int argc, char *argv[]) {
     }
     else if (isEqual(command, "shutdown")) {
         success = _cmdShutdown(chp, argc-1, argv+1);
+    }
+    else if (isEqual(command, "wakeup")) {
+        success = _cmdWakeup();
     }
     else {
         chprintf(chp, "invalid command %s\n", command);
@@ -266,6 +274,20 @@ static void _getDate(BaseSequentialStream *chp, int argc, char *argv[]) {
 
 static pcu_returncode_e _getWakeupReason(BaseSequentialStream *chp) {
     wakeup_reason_e wakeup_reason = statemachine_getWakeupReason();
+    switch (wakeup_reason) {
+        case WAKEUP_REASON_POWER_ON:
+            chprintf(chp, "poweron\n");
+            break;
+        case WAKEUP_REASON_USER_REQUEST:
+            chprintf(chp, "requested\n");
+            break;
+        case WAKEUP_REASON_SCHEDULED:
+            chprintf(chp, "scheduled\n");
+            break;
+        default:
+            return pcuFAIL;
+    }
+    return pcuSUCCESS;
 }
 
 

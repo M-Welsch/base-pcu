@@ -39,7 +39,7 @@ int STATE_ACTIVE_state(void) {
  */
 int STATE_SHUTDOWN_REQUESTED_state(void) {
     state_codes_e next_state = STATE_DEEP_SLEEP;
-    sendToBcu("shutdown_requesed state");
+    sendToBcu("shutdown_requested state");
     eventmask_t evt = chEvtWaitAnyTimeout(ALL_EVENTS, TIME_MS2I(5000));
     if (evt & (EVENT_SHUTDOWN_ABORTED | EVENT_WAKEUP_REQUESTED_BY_ALARMCLOCK )) {
         next_state = STATE_ACTIVE;
@@ -56,6 +56,10 @@ int STATE_DEEP_SLEEP_state(void) {
     eventmask_t evt = chEvtWaitAny(ALL_EVENTS);
     if (evt & EVENT_WAKEUP_REQUESTED_BY_ALARMCLOCK) {
         wakeup_reason = WAKEUP_REASON_SCHEDULED;
+        next_state = STATE_ACTIVE;
+    }
+    else if (evt & EVENT_WAKEUP_REQUESTED_BY_USER) {
+        wakeup_reason = WAKEUP_REASON_USER_REQUEST;
         next_state = STATE_ACTIVE;
     }
     else if (evt & (EVENT_BUTTON_0_PRESSED | EVENT_BUTTON_1_PRESSED)) {
