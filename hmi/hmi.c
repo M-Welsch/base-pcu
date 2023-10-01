@@ -7,12 +7,12 @@
 
 static void pb0_cb(void *arg) {
     UNUSED_PARAM(arg);
-    statemachine_sendEvent(EVENT_BUTTON_0_PRESSED);
+    statemachine_sendEventFromIsr(EVENT_BUTTON_0_PRESSED);
 }
 
 static void pb1_cb(void *arg) {
     UNUSED_PARAM(arg);
-    statemachine_sendEvent(EVENT_BUTTON_1_PRESSED);
+    statemachine_sendEventFromIsr(EVENT_BUTTON_1_PRESSED);
 }
 
 void hmi_init(void) {

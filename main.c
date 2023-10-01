@@ -23,7 +23,7 @@
 #include "measurement.h"
 #include "docking.h"
 #include "statemachine.h"
-#include "hmi.h"
+#include "hmi/hmi.h"
 
 int main(void) {
     halInit();
@@ -39,7 +39,7 @@ int main(void) {
     adcSTM32SetCCR(ADC_CCR_TSEN | ADC_CCR_VREFEN);
 
     while (true) {
-        //statemachine_mainloop();
-        chThdSleepMilliseconds(10000);
+        alarmClock_getWakeup();
+        chThdSleepMilliseconds(100);
     }
 }
