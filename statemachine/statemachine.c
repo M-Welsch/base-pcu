@@ -1,13 +1,8 @@
-#include "stdint-gcc.h"
-
 #include "statemachine.h"
-#include "ch.h"
 #include "power.h"
 #include "pcu_events.h"
 #include "bcuCommunication.h"
-#include "hal.h"
 
-volatile int _event = 0;
 static wakeup_reason_e wakeup_reason = WAKEUP_REASON_POWER_ON;
 
 wakeup_reason_e statemachine_getWakeupReason(void) {
@@ -81,6 +76,10 @@ int STATE_HMI_state(void) {
     }
     else if (evt & EVENT_BUTTON_1_PRESSED) {
         sendToBcu("Button 1 pressed");
+    }
+    else if (evt & EVENT_WAKEUP_REQUESTED_BY_USER) {
+        wakeup_reason = WAKEUP_REASON_USER_REQUEST;
+        next_state = STATE_ACTIVE;
     }
     return next_state;
 }
