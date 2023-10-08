@@ -196,6 +196,9 @@ static pcu_returncode_e _cmdShutdown(BaseSequentialStream *chp, int argc, char *
     }
     const char *init_or_abort = argv[0];
     if (isEqual(init_or_abort, "init")) {
+        if (argc == 2) {
+            chprintf(chp, "ignoring custom timeout");
+        }
         statemachine_sendEvent(EVENT_SHUTDOWN_REQUESTED);
     }
     else if (isEqual(init_or_abort, "abort")) {
@@ -233,6 +236,36 @@ static void cmd(BaseSequentialStream *chp, int argc, char *argv[]) {
     }
     else if (isEqual(command, "wakeup")) {
         success = _cmdWakeup();
+    }
+    else {
+        chprintf(chp, "invalid command %s\n", command);
+    }
+
+    if (success == pcuSUCCESS) {
+        chprintf(chp, "%s successful\n", command);
+    }
+    else {
+        chprintf(chp, "%s failed\n", command);
+    }
+}
+
+static void debugcmd(BaseSequentialStream *chp, int argc, char *argv[]) {
+    if (argc < 1) {
+        _argument_missing(chp);
+        return;
+    }
+    char *command = argv[0];
+    pcu_returncode_e success = pcuFAIL;
+    if (isEqual(command, "wakeup")) {
+        success = _cmdWakeup();
+    }
+    else if (isEqual(command, "button_0_pressed")) {
+        statemachine_sendEvent(EVENT_BUTTON_0_PRESSED);
+        success = pcuSUCCESS;
+    }
+    else if (isEqual(command, "button_1_pressed")) {
+        statemachine_sendEvent(EVENT_BUTTON_1_PRESSED);
+        success = pcuSUCCESS;
     }
     else {
         chprintf(chp, "invalid command %s\n", command);
@@ -362,12 +395,6 @@ static void _setDate(BaseSequentialStream *chp, int argc, char *argv[]) {
     }
 }
 
-static void _setState(BaseSequentialStream *chp, int argc, char *argv[]) {
-    UNUSED_PARAM(argc);
-    UNUSED_PARAM(argv);
-    chprintf(chp, "not implemented\n");
-}
-
 static void cmd_set(BaseSequentialStream *chp, int argc, char *argv[]) {
     UNUSED_PARAM(argc);
     UNUSED_PARAM(argv);
@@ -377,9 +404,6 @@ static void cmd_set(BaseSequentialStream *chp, int argc, char *argv[]) {
     }
     if(isEqual(argv[0], "date")) {
         _setDate(chp, argc-1, argv+1);
-    }
-    else if (isEqual(argv[0], "state")) {
-        _setState(chp, argc-1, argv+1);
     }
     else {
         chprintf(chp, "invalid\n");
@@ -397,6 +421,7 @@ static const ShellCommand commands[] = {
         {"set", cmd_set},
         {"probe", cmd_testForEcho},
         {"cmd", cmd},
+        {"debugcmd", debugcmd},
         {NULL, NULL}
 };
 

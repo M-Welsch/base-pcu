@@ -52,7 +52,7 @@ int STATE_SHUTDOWN_REQUESTED_state(void) {
  */
 int STATE_DEEP_SLEEP_state(void) {
     state_codes_e next_state = STATE_DEEP_SLEEP;
-    sendToBcu("deep sleep state");
+    sendToBcu("deep_sleep state");
     eventmask_t evt = chEvtWaitAny(ALL_EVENTS);
     if (evt & EVENT_WAKEUP_REQUESTED_BY_ALARMCLOCK) {
         wakeup_reason = WAKEUP_REASON_SCHEDULED;
