@@ -14,6 +14,8 @@
 #include "power.h"
 #include "statemachine.h"
 #include "pcu_events.h"
+#include "display.h"
+#include "hmi.h"
 
 /** @brief mailbox for messages to BaSe BCU */
 mailbox_t bcu_comm_mb;
@@ -395,6 +397,37 @@ static void _setDate(BaseSequentialStream *chp, int argc, char *argv[]) {
     }
 }
 
+static void _setDisplay(BaseSequentialStream *chp, int argc, char *argv[]) {
+    UNUSED_PARAM(chp);
+    UNUSED_PARAM(argc);
+    if (isEqual(argv[0], "text")) {
+        /* FIXME: cannot display new line. Maybe put in second argument */
+        display_write(argv[1]);
+    }
+    else if (isEqual(argv[0], "brightness")) {
+        char *endPtr;
+        uint8_t brightness = (uint8_t) strtol(argv[1], &endPtr, 10);
+        display_dim(brightness);
+    }
+    else {
+        ;
+    }
+}
+
+static void _setLed(BaseSequentialStream *chp, int argc, char *argv[]) {
+    UNUSED_PARAM(chp);
+    UNUSED_PARAM(argc);
+    /* Todo: implement correctly */
+    if (isEqual(argv[0], "on")) {
+        hmi_led_dim(100);
+    }
+    if (isEqual(argv[0], "off")) {
+        hmi_led_dim(0);
+    }
+
+}
+
+
 static void cmd_set(BaseSequentialStream *chp, int argc, char *argv[]) {
     UNUSED_PARAM(argc);
     UNUSED_PARAM(argv);
@@ -404,6 +437,12 @@ static void cmd_set(BaseSequentialStream *chp, int argc, char *argv[]) {
     }
     if(isEqual(argv[0], "date")) {
         _setDate(chp, argc-1, argv+1);
+    }
+    else if (isEqual(argv[0], "display")) {
+        _setDisplay(chp, argc-1, argv+1);
+    }
+    else if (isEqual(argv[0], "led")) {
+        _setLed(chp, argc-1, argv+1);
     }
     else {
         chprintf(chp, "invalid\n");

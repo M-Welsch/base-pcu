@@ -166,6 +166,8 @@ void statemachine_mainloop(void) {
     state_codes_e current_state = ENTRY_STATE;
     state_codes_e desired_state = ENTRY_STATE;
 
+    power5v();  // necessary to turn it on initially
+
     while(true) {
         state_fun = state[current_state];
         desired_state = state_fun();

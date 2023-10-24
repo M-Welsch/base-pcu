@@ -10,6 +10,6 @@
 pcu_returncode_e display_init(void);
 pcu_returncode_e display_write(const char* lines);
 pcu_returncode_e display_clear(void);
-pcu_returncode_e display_dim(const float brightness_percent);
+pcu_returncode_e display_dim(const uint8_t brightness_percent);
 
 #endif //BASE_PCU_DISPLAY_H

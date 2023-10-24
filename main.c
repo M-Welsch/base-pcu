@@ -35,6 +35,7 @@ int main(void) {
     hmi_init();
     //adcSTM32SetCCR(ADC_CCR_TSEN | ADC_CCR_VREFEN);
 
+
     while (true) {
         chThdSleepMilliseconds(10000);
     }

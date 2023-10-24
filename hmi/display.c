@@ -23,11 +23,14 @@ void _clearRs(void) {
 }
 
 void _outputData(uint8_t data_nibble) {
-    uint16_t bits = (data_nibble >> HMI_NSS2_DISPLAY_DB4) & DISPLAY_DATA_BIT_MASK;
+    uint32_t bits = (data_nibble << 12) & 0b1111000000000000;
     palSetPort(GPIOB, bits);
+    uint32_t bits_to_clear = ~bits & 0b1111000000000000;
+    palClearPort(GPIOB, bits_to_clear);
 }
 
 pcu_returncode_e display_init(void) {
+    _outputData(0x00);
     /* refering to datasheet SPLC780D and (more importantly) lcd.py of "old" BaSe implementation*/
     chThdSleepMilliseconds(100);
     _clearRs();
@@ -143,7 +146,12 @@ pcu_returncode_e display_write(const char* s) {
 
 
 
-pcu_returncode_e display_dim(const float brightness_percent) {
-    UNUSED_PARAM(brightness_percent);
-    return pcuFAIL;
+pcu_returncode_e display_dim(const uint8_t brightness_percent) {
+    if (brightness_percent >= 50) {
+        palSetLine(LINE_HMI_PWM0_DISPLAY);
+    }
+    else {
+        palClearLine(LINE_HMI_PWM0_DISPLAY);
+    }
+    return pcuSUCCESS;
 }
